@@ -1,89 +1,67 @@
 from tensorflow import shape, transpose, reshape, matmul, cast, float32, math
-from tensorflow.nn import softmax
 from tensorflow.keras.layers import Layer, Dense
+from tensorflow.nn import softmax
+
+"""
+Multi Head Self Attention Layer class.
+
+:param embedding_dim: number of dimensions of embeded data
+:param num_heads: number of heads 
+"""
 
 
 class MultiHeadSelfAttention(Layer):
-
-    def __init__(self, num_nodes, num_heads, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, embedding_dim, num_heads):
+        super(MultiHeadSelfAttention, self).__init__()
+        if embedding_dim % num_heads != 0:
+            raise ValueError(
+                f"embedding dimension = {embedding_dim} should be divisible by number of heads = {num_heads}"
+            )
+        self.embedding_dim = embedding_dim
         self.num_heads = num_heads
-        self.num_nodes = num_nodes
+        self.projection_dim = embedding_dim // num_heads
+        self.query_dense = Dense(embedding_dim)
+        self.key_dense = Dense(embedding_dim)
+        self.value_dense = Dense(embedding_dim)
+        self.combine_heads = Dense(embedding_dim)
 
-        assert num_nodes % self.num_heads == 0
+    @staticmethod
+    def attention(query, key, value):
+        score = matmul(query, key, transpose_b=True)
+        dim_key = cast(shape(key)[-1], float32)
+        scaled_score = score / math.sqrt(dim_key)
+        weights = softmax(scaled_score, axis=-1)
+        output = matmul(weights, value)
+        return output, weights
 
-        self.depth = self.num_nodes // self.num_heads
-
-        # queries
-        self.wq = Dense(num_nodes)
-        # keys
-        self.wk = Dense(num_nodes)
-        # values
-        self.wv = Dense(num_nodes)
-
-        self.final_linear = Dense(num_nodes)
-
-    def __call__(self, layer_input, mask):
-        batch_size = shape(layer_input)[0]
-
-        # input values go through dense layers
-        q = self.wq(layer_input)
-        k = self.wk(layer_input)
-        v = self.wv(layer_input)
-
-        q = self.split_heads(q, batch_size)
-        k = self.split_heads(k, batch_size)
-        v = self.split_heads(v, batch_size)
-
-        scaled_attention, attention_weights = self.scaled_dot_product_attention(q, k, v, mask)
-
-        scaled_attention = transpose(scaled_attention, perm=[0, 2, 1, 3])
-
-        concat_attention = reshape(scaled_attention, (batch_size, -1, self.num_nodes))
-
-        output = self.final_linear(concat_attention)
-
-        return output
-
-    def split_heads(self, x, batch_size):
-        """Split the last dimension into (num_heads, depth).
-        Transpose the result such that the shape is (batch_size, num_heads, seq_len, depth)
-        """
-        x = reshape(x, (batch_size, -1, self.num_heads, self.depth))
+    def separate_heads(self, x, batch_size):
+        x = reshape(x, (batch_size, -1, self.num_heads, self.projection_dim))
         return transpose(x, perm=[0, 2, 1, 3])
 
-    def scaled_dot_product_attention(self, q, k, v, mask):
-        """Calculate the attention weights.
-        q, k, v must have matching leading dimensions.
-        k, v must have matching penultimate dimension, i.e.: seq_len_k = seq_len_v.
-        The mask has different shapes depending on its type(padding or look ahead)
-        but it must be broadcastable for addition.
+    def __call__(self, inputs, mask):
+        # x.shape = [batch_size, seq_len, embedding_dim]
+        batch_size = shape(inputs)[0]
+        query = self.query_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        key = self.key_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        value = self.value_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        query = self.separate_heads(
+            query, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        key = self.separate_heads(
+            key, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        value = self.separate_heads(
+            value, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        attention, weights = self.attention(query, key, value)
+        attention = transpose(
+            attention, perm=[0, 2, 1, 3]
+        )  # (batch_size, seq_len, num_heads, projection_dim)
+        concat_attention = reshape(
+            attention, (batch_size, -1, self.embedding_dim)
+        )  # (batch_size, seq_len, embed_dim)
+        output = self.combine_heads(
+            concat_attention
+        )  # (batch_size, seq_len, embed_dim)
+        return output
 
-        Args:
-          q: query shape == (..., seq_len_q, depth)
-          k: key shape == (..., seq_len_k, depth)
-          v: value shape == (..., seq_len_v, depth_v)
-          mask: Float tensor with shape broadcastable
-                to (..., seq_len_q, seq_len_k). Defaults to None.
-
-        Returns:
-          output, attention_weights
-        """
-
-        matmul_qk = matmul(q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
-
-        # scale matmul_qk
-        dk = cast(shape(k)[-1], float32)
-        scaled_attention_logits = matmul_qk / math.sqrt(dk)
-
-        # add the mask to the scaled tensor.
-        if mask is not None:
-            scaled_attention_logits += (mask * -1e9)
-
-            # softmax is normalized on the last axis (seq_len_k) so that the scores
-        # add up to 1.
-        attention_weights = softmax(scaled_attention_logits, axis=-1)  # (..., seq_len_q, seq_len_k)
-
-        output = matmul(attention_weights, v)  # (..., seq_len_q, depth_v)
-
-        return output, attention_weights

@@ -1,37 +1,26 @@
-from tensorflow.keras.losses import categorical_crossentropy
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import Model
-import numpy
+from tensorflow.keras.backend import dot, transpose
+from tensorflow.keras.layers import Lambda, TimeDistributed
+from tensorflow.keras.losses import categorical_crossentropy
+from tensorflow.keras.metrics import categorical_accuracy
+from tensorflow.keras.optimizers import Adam
 
-from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks
-
-
-def train_model(bert_model : Model, tokens, max_len : int, vocab_size : int):
-    train_tokens = create_train_data(tokens)
-    train_ids = numpy.array(create_ids(train_tokens, max_len))
-    train_segments = numpy.array(create_segments(train_tokens, max_len))
-    train_mask = numpy.array(create_masks(train_tokens, max_len))
-    expected_ids = create_ids(tokens, max_len)
-
-    bert_model.compile(optimizer=Adam(),
-                       loss=categorical_crossentropy)
-
-    expected_one_hot = numpy.array(one_hot(expected_ids,vocab_size))
-    print(numpy.shape(train_ids))
-    print(numpy.shape(expected_one_hot))
-
-    bert_model.fit([train_ids, train_segments, train_mask], [expected_one_hot], batch_size=10, epochs=10)
+from keras_bert.data_generator import DataGenerator
+from keras_bert.utils import plot_model_history
 
 
-def one_hot(expected_ids, vocab_size):
-    result = []
-    i = 0
-    for row in expected_ids:
-        token = []
-        for token_id in row:
-            expected_row = [0] * vocab_size
-            expected_row[token_id] = 1
-            token.append(expected_row)
-        result.append(token)
+def train_model(bert_model: Model, max_len: int, vocab_size, batch_size, epochs):
+    decoder = Lambda(lambda x: dot(x, transpose(bert_model.get_layer('Tokens_Embedding').weights[0])), name='lm_logits')
+    output = TimeDistributed(decoder)(bert_model.outputs[0])
 
-    return result
+    training_model = Model(inputs=bert_model.inputs, outputs=[output])
+    print(training_model.summary())
+    print("Vocab size:", vocab_size)
+    print("Max len of tokens:", max_len)
+    training_model.compile(optimizer=Adam(), loss=categorical_crossentropy, metrics=[categorical_accuracy])
+
+    generator = DataGenerator("../data/Document.txt", max_len, vocab_size, batch_size=batch_size)
+    val_generator = DataGenerator("../data/Validation.txt", max_len, vocab_size, batch_size=batch_size)
+
+    history = training_model.fit_generator(generator=generator, validation_data=val_generator, epochs=epochs)
+    plot_model_history(history)

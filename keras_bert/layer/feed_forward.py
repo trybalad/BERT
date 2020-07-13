@@ -1,11 +1,18 @@
 from tensorflow.keras.layers import Layer, Dense
 
+"""
+Point-Wise Feed-Forward Layer class.
+Creates fully connected feed forward layer with `relu` activation in between.
+:param output_nodes_num: input and output size of nodes
+:param feed_forward_dimensions: number of nodes in the inner-layer 
+"""
 
-class FeedForward(Layer):
-    def __init__(self, nodes_num, feed_forward_depth, **kwargs):
+
+class PointWiseFeedForward(Layer):
+    def __init__(self, output_nodes_num, feed_forward_dimensions, **kwargs):
         super().__init__(**kwargs)
-        self.in_layer = Dense(feed_forward_depth, activation='relu')
-        self.out_layer = Dense(nodes_num)
+        self.in_layer = Dense(feed_forward_dimensions, activation='relu')
+        self.out_layer = Dense(output_nodes_num)
 
     def __call__(self, layer_input, **kwargs):
         val = self.in_layer(layer_input)

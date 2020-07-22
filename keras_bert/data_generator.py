@@ -43,10 +43,10 @@ class DataGenerator(Sequence):
         self.lines = [[line.strip()] for line in self.lines if line.strip() != '']
 
     def generate_data(self, lines):
-        tokens = create_tokens(lines, tokenizer)
+        tokens = create_tokens(lines, self.tokenizer)
         train_tokens = create_train_data(tokens)
 
-        train_ids = np.array(create_ids(train_tokens, self.max_len, tokenizer))
+        train_ids = np.array(create_ids(train_tokens, self.max_len, self.tokenizer))
         train_segments = np.array(create_segments(train_tokens, self.max_len))
         train_mask = np.array(create_masks(train_tokens, self.max_len))
 

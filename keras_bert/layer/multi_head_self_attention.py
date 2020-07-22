@@ -47,7 +47,7 @@ class MultiHeadSelfAttention(Layer):
         return transpose(x, perm=[0, 2, 1, 3])
 
     """ Layer use self-attention, so we are using one input for all layers"""
-    def __call__(self, inputs, mask):
+    def __call__(self, inputs):
 
         batch_size = shape(inputs)[0]
 

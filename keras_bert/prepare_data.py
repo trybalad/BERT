@@ -19,10 +19,9 @@ SENTENCE_SEPARATOR_TOKEN = "[SEP]"
 NOT_TO_CHANGE = [CLASS_TOKEN, SENTENCE_SEPARATOR_TOKEN]
 
 
-def create_tokens(lines) -> [[str]]:
+def create_tokens(lines, tokenizer) -> [[str]]:
     tokens = []
     count = 0
-    tokenizer = FullTokenizer(vocab_file='../data/bert_pl_model/vocab.txt')
 
     for text in lines:
         tokens.insert(count, [])
@@ -35,8 +34,8 @@ def create_tokens(lines) -> [[str]]:
 
 
 # Create list of tokens ids
-def create_ids(tokens_list, max_len):
-    tokenizer = FullTokenizer(vocab_file='../data/bert_pl_model/vocab.txt')
+def create_ids(tokens_list, max_len, tokenizer):
+
     ids_list = []
     for tokens in tokens_list:
         ids_list.append(tokenizer.convert_tokens_to_ids(tokens) + [0] * (max_len - len(tokens)))

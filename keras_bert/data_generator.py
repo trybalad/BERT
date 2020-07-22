@@ -16,12 +16,13 @@ Data generator for training/validation of model
 
 
 class DataGenerator(Sequence):
-    def __init__(self, text_file: str, max_len, vocab_size, batch_size=32):
+    def __init__(self, text_file: str, max_len, vocab_size, tokenizer, batch_size=32):
         self.max_len = max_len
         self.vocab_size = vocab_size
         self.text_file = codecs.open(text_file, 'r', 'utf-8')
         self.lines = self.text_file.readlines()
         self.remove_empty_lines()
+        self.tokenizer = tokenizer
 
         self.document_lines_count = len(self.lines)
         self.start_index = 0
@@ -42,14 +43,14 @@ class DataGenerator(Sequence):
         self.lines = [[line.strip()] for line in self.lines if line.strip() != '']
 
     def generate_data(self, lines):
-        tokens = create_tokens(lines)
+        tokens = create_tokens(lines, tokenizer)
         train_tokens = create_train_data(tokens)
 
-        train_ids = np.array(create_ids(train_tokens, self.max_len))
+        train_ids = np.array(create_ids(train_tokens, self.max_len, tokenizer))
         train_segments = np.array(create_segments(train_tokens, self.max_len))
         train_mask = np.array(create_masks(train_tokens, self.max_len))
 
-        expected_ids = create_ids(tokens, self.max_len)
+        expected_ids = create_ids(tokens, self.max_len, tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
         return [train_ids, train_segments, train_mask], [expected_one_hot]

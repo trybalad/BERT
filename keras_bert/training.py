@@ -7,9 +7,10 @@ from tensorflow.keras.optimizers import Adam
 
 from keras_bert.data_generator import DataGenerator
 from keras_bert.utils import plot_model_history
+from keras_bert.tokenizer import Tokenizer
 
 
-def train_model(bert_model: Model, max_len: int, vocab_size, batch_size, epochs):
+def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, vocab_size, batch_size, epochs):
     decoder = Lambda(lambda x: dot(x, transpose(bert_model.get_layer('Tokens_Embedding').weights[0])), name='lm_logits')
     output = TimeDistributed(decoder)(bert_model.outputs[0])
 
@@ -19,8 +20,8 @@ def train_model(bert_model: Model, max_len: int, vocab_size, batch_size, epochs)
     print("Max len of tokens:", max_len)
     training_model.compile(optimizer=Adam(), loss=categorical_crossentropy, metrics=[categorical_accuracy])
 
-    generator = DataGenerator("../data/Document.txt", max_len, vocab_size, batch_size=batch_size)
-    val_generator = DataGenerator("../data/Validation.txt", max_len, vocab_size, batch_size=batch_size)
+    generator = DataGenerator("../data/Document.txt", max_len, vocab_size, tokenizer, batch_size=batch_size)
+    val_generator = DataGenerator("../data/Validation.txt", max_len, vocab_size, tokenizer, batch_size=batch_size)
 
     history = training_model.fit_generator(generator=generator, validation_data=val_generator, epochs=epochs)
     plot_model_history(history)

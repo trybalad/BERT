@@ -37,9 +37,9 @@ def create_encoder_layers(encoders_num, embeddings, nodes_num, heads_num, ff_dim
     Creates encoders_num of Encoder layers, starting with layer with output from embeddings.
     Number of nodes and number of heads and dimensions of point wise feed forward network are given.
     """
-    encoder = Encoder(nodes_num, heads_num, ff_dim)(embeddings, None)
+    encoder = Encoder(nodes_num, heads_num, ff_dim)(embeddings)
     for i in range(1, encoders_num):
-        encoder = Encoder(nodes_num, heads_num, ff_dim)(encoder, None)
+        encoder = Encoder(nodes_num, heads_num, ff_dim)(encoder)
     return encoder
 
 

@@ -28,8 +28,8 @@ class Encoder(Layer):
         self.attention_drop = Dropout(drop_rate)
         self.ff_drop = Dropout(drop_rate)
 
-    def __call__(self, x, mask):
-        attn_output = self.multi_head_attention(x, mask)
+    def __call__(self, x):
+        attn_output = self.multi_head_attention(x)
         attn_output = self.attention_drop(attn_output)
 
         out1 = self.attention_norm(x + attn_output)

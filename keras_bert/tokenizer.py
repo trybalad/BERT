@@ -12,7 +12,7 @@ MASK_TOKEN = "[MASK]"
 MASK_ID = 3
 
 
-class Tokenizer():
+class Tokenizer:
     def __init__(self):
         self.nlp = spacy.load('pl_core_news_md')
         self.vocab_size = 4
@@ -40,3 +40,9 @@ class Tokenizer():
                 self.index2word[self.vocab_size] = token.lemma_
                 self.vocab_size += 1
         return [token.lemma_ for token in doc]
+
+    def convert_tokens_to_ids(self, tokens):
+        result = []
+        for token in tokens:
+            result.append(self.word2index[token])
+        return result

@@ -27,7 +27,7 @@ def create_tokens(lines, tokenizer) -> [[str]]:
         tokens.insert(count, [])
         tokens[count].append(CLASS_TOKEN)
         for sent in text:
-            tokens[count] += (tokenizer.tokenize(sent))
+            tokens[count] += (tokenizer.convert_to_tokens(sent))
             tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
 
     return tokens

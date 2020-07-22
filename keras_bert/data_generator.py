@@ -50,7 +50,7 @@ class DataGenerator(Sequence):
         train_segments = np.array(create_segments(train_tokens, self.max_len))
         train_mask = np.array(create_masks(train_tokens, self.max_len))
 
-        expected_ids = create_ids(tokens, self.max_len, tokenizer)
+        expected_ids = create_ids(tokens, self.max_len, self.tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
         return [train_ids, train_segments, train_mask], [expected_one_hot]

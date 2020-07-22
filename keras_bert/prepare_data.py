@@ -1,8 +1,6 @@
 import random
 from math import floor
 
-from bert.tokenization import FullTokenizer
-
 """
 Class preparing data for model.
 Provided methods for creating:

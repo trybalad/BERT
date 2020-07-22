@@ -1,6 +1,4 @@
 import matplotlib.pyplot as plt
-import io
-from bert.tokenization import FullTokenizer
 
 
 def plot_model_history(model_history):

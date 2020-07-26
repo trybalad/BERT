@@ -44,6 +44,6 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_fil
     else:
         checkpoint = None
 
-    history = training_model.fit_generator(generator=generator, validation_data=val_generator, epochs=epochs,
-                                           callbacks=checkpoint)
+    history = training_model.fit(generator, validation_data=val_generator, epochs=epochs,
+                                           callbacks=checkpoint, batch_size=batch_size)
     plot_model_history(history)

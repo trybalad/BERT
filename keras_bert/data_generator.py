@@ -16,34 +16,42 @@ Data generator for training/validation of model
 
 
 class DataGenerator(Sequence):
-    def __init__(self, text_file: str, max_len, vocab_size, tokenizer, batch_size=32):
+    def __init__(self, text_file: str, max_len, vocab_size, document_lines_size, tokenizer, batch_size=32):
         self.max_len = max_len
         self.vocab_size = vocab_size
-        self.text_file = codecs.open(text_file, 'r', 'utf-8')
-        self.lines = self.text_file.readlines()
-        self.remove_empty_lines()
+        self.text_file = text_file
         self.tokenizer = tokenizer
 
-        self.document_lines_count = len(self.lines)
+        self.document_lines_size = document_lines_size
         self.start_index = 0
         self.end_index = batch_size
         self.batch_size = batch_size
 
     def __len__(self):
-        return int(np.floor(self.document_lines_count / self.batch_size))
+        return int(np.floor(self.document_lines_size / self.batch_size))
 
     def __getitem__(self, index):
         start = self.batch_size * index
         end = start + self.batch_size
-        content_lines = self.lines[start:end]
+        content_lines = self.get_content_lines(start, end)
         x, y = self.generate_data(content_lines)
         return x, y
 
-    def remove_empty_lines(self):
-        self.lines = [[line.strip()] for line in self.lines if line.strip() != '']
+    def get_content_lines(self, start, end):
+        file = codecs.open(self.text_file, 'r', 'utf-8')
+        content_lines = []
+
+        for i in range(0, end):
+            if i < start:
+                file.readline()
+            elif start <= i < end:
+                content_lines.append(file.readline().strip())
+            else:
+                break
+        return content_lines
 
     def generate_data(self, lines):
-        tokens = create_tokens(lines, self.tokenizer)
+        tokens = create_tokens(lines, self.tokenizer, self.max_len)
         train_tokens = create_train_data(tokens)
 
         train_ids = np.array(create_ids(train_tokens, self.max_len, self.tokenizer))

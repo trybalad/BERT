@@ -23,23 +23,45 @@ class Tokenizer:
 
     def prepare_vocab(self, document_name):
         document = codecs.open(document_name, 'r', 'utf-8')
-        lines = document.readlines()
-        lines = [line.strip() for line in lines if line.strip() != '']
-        for line in lines:
-            self.convert_to_tokens(line)
+        line = document.readline()
+
+        while line:
+            line = line.strip()
+            if line != '':
+                for sentence in self.split_sentences(line):
+                    self.convert_to_tokens(sentence.text, True)
+            line = document.readline()
+
+    def read_vocab(self, vocab_name):
+        document = codecs.open(vocab_name, 'r', 'utf-8')
+        word = document.readline()
+        while word:
+            self.add_to_vocab(word)
+            word = document.readline()
+
+    def add_to_vocab(self, word):
+        word = word.strip()
+        if word not in self.word2index:
+            self.word2index[word] = self.vocab_size
+            self.index2word[self.vocab_size] = word
+            self.vocab_size += 1
+
+    def write_vocab(self, vocab_name):
+        document = codecs.open(vocab_name, 'w', 'utf-8')
+        document.write(self.index2word[0])
+        for i in range(1, self.vocab_size):
+            document.write('\n' + self.index2word[i])
 
     def split_sentences(self, document):
         doc = self.nlp(document)
         return doc.sents
 
-    def convert_to_tokens(self, document):
+    def convert_to_tokens(self, document, learn_vocab=False):
         doc = self.nlp(document)
-        for token in doc:
-            if token.lemma_ not in self.word2index:
-                self.word2index[token.lemma_] = self.vocab_size
-                self.index2word[self.vocab_size] = token.lemma_
-                self.vocab_size += 1
-        return [token.lemma_ for token in doc]
+        if learn_vocab:
+            for token in doc:
+                self.add_to_vocab(token.lemma_)
+        return [token.lemma_ for token in doc if not token.lemma_.isspace()]
 
     def convert_tokens_to_ids(self, tokens):
         result = []

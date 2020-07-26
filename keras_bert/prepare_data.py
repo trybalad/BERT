@@ -10,30 +10,36 @@ Masks - Mask of used indexes 0 - padding, 1 - used index
 Training data - Creates [MASK] for 15% of inputs ids for MLM(Masked language modeling) task
 """
 
-
 MASK_TOKEN = "[MASK]"
 CLASS_TOKEN = "[CLS]"
 SENTENCE_SEPARATOR_TOKEN = "[SEP]"
 NOT_TO_CHANGE = [CLASS_TOKEN, SENTENCE_SEPARATOR_TOKEN]
 
 
-def create_tokens(lines, tokenizer) -> [[str]]:
+def create_tokens(lines, tokenizer, max_len) -> [[str]]:
     tokens = []
     count = 0
 
     for text in lines:
+        sentence_count = 0
         tokens.insert(count, [])
         tokens[count].append(CLASS_TOKEN)
-        for sent in text:
-            tokens[count] += (tokenizer.convert_to_tokens(sent))
+
+        for sent in tokenizer.split_sentences(text):
+            tokens[count] += (tokenizer.convert_to_tokens(sent.text))
             tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
+            sentence_count += 1
+            if sentence_count == 2:
+                break
+
+        if len(tokens[count]) > max_len:
+            tokens[count] = tokens[count][0:max_len]
 
     return tokens
 
 
 # Create list of tokens ids
 def create_ids(tokens_list, max_len, tokenizer):
-
     ids_list = []
     for tokens in tokens_list:
         ids_list.append(tokenizer.convert_tokens_to_ids(tokens) + [0] * (max_len - len(tokens)))

@@ -14,6 +14,8 @@ from keras_bert.utils import plot_model_history
 def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_file, validate_file=None,
                 training_data_length=1000, validation_data_length=1000, batch_size=10,
                 epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None):
+
+
     decoder = Lambda(lambda x: dot(x, transpose(bert_model.get_layer('Tokens_Embedding').weights[0])), name='lm_logits')
     output = TimeDistributed(decoder)(bert_model.outputs[0])
 
@@ -45,5 +47,5 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_fil
         checkpoint = None
 
     history = training_model.fit(generator, validation_data=val_generator, epochs=epochs,
-                                           callbacks=checkpoint, batch_size=batch_size)
+                                 callbacks=checkpoint)
     plot_model_history(history)

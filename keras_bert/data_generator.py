@@ -61,4 +61,4 @@ class DataGenerator(Sequence):
         expected_ids = create_ids(tokens, self.max_len, self.tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
-        return [train_ids, train_segments, train_mask], [expected_one_hot]
+        return [np.array(train_ids), np.array(train_segments), np.array(train_mask)], np.array(expected_one_hot)

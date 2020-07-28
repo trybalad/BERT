@@ -68,3 +68,6 @@ class Tokenizer:
         for token in tokens:
             result.append(self.word2index[token])
         return result
+
+    def convert_to_token(self, id):
+        return self.index2word[id]

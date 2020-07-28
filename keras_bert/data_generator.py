@@ -1,7 +1,7 @@
 import codecs
 
 import numpy as np
-from tensorflow.keras.utils import Sequence
+from tensorflow.python.keras.utils.data_utils import Sequence
 from tensorflow.keras.utils import to_categorical
 from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks, create_tokens
 
@@ -28,11 +28,11 @@ class DataGenerator(Sequence):
         self.batch_size = batch_size
 
     def __len__(self):
-        return int(np.floor(self.document_lines_size / self.batch_size))
+        return int(np.ceil(self.document_lines_size / self.batch_size))
 
     def __getitem__(self, index):
         start = self.batch_size * index
-        end = start + self.batch_size
+        end = min(start + self.batch_size, self.document_lines_size)
         content_lines = self.get_content_lines(start, end)
         x, y = self.generate_data(content_lines)
         return x, y

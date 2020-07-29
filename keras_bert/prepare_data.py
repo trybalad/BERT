@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from math import floor
 
 """
@@ -84,3 +85,12 @@ def create_train_data(tokens_list):
                 test[index] = MASK_TOKEN
         test_inputs.append(test)
     return test_inputs
+
+
+# Reverts one coded ids of tokens to tokens form
+def translate_ids(ids,tokenizer):
+    tokens = []
+    for i in range(ids.shape[1]):
+        decoded_datum = np.argmax(ids[0][i])
+        tokens.append(tokenizer.convert_to_token(decoded_datum))
+    return tokens

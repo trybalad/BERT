@@ -2,10 +2,10 @@ from tensorflow.keras import Model
 from tensorflow.keras.backend import switch, zeros_like, floatx, sum, cast, epsilon, argmax, equal, not_equal, \
     transpose, dot
 from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import Lambda, TimeDistributed,Dense
+from tensorflow.keras.layers import Lambda, TimeDistributed
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.metrics import categorical_accuracy
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import Adam
 
 from keras_bert.data_generator import DataGenerator
 from keras_bert.tokenizer import Tokenizer
@@ -14,9 +14,8 @@ from keras_bert.tokenizer import Tokenizer
 def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_file, validate_file=None,
                 training_data_length=1000, validation_data_length=1000, batch_size=10,
                 epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None):
-    # decoder = Lambda(lambda x: dot(x, transpose(bert_model.get_layer('Tokens_Embedding').weights[0])), name='lm_logits')
-    # output = TimeDistributed(decoder)(bert_model.outputs[0])
-    output = Dense(tokenizer.vocab_size,activation="softmax")(bert_model.outputs[0])
+    decoder = Lambda(lambda x: dot(x, transpose(bert_model.get_layer('Tokens_Embedding').weights[0])), name='lm_logits')
+    output = TimeDistributed(decoder)(bert_model.outputs[0])
     training_model = Model(inputs=bert_model.inputs, outputs=[output])
 
     print(training_model.summary())

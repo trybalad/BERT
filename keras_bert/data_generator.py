@@ -1,8 +1,9 @@
 import codecs
 
 import numpy as np
-from tensorflow.python.keras.utils.data_utils import Sequence
 from tensorflow.keras.utils import to_categorical
+from tensorflow.python.keras.utils.data_utils import Sequence
+
 from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks, create_tokens
 
 """
@@ -16,7 +17,7 @@ Data generator for training/validation of model
 
 
 class DataGenerator(Sequence):
-    def __init__(self, text_file: str, max_len, vocab_size, document_lines_size, tokenizer, batch_size=32):
+    def __init__(self, text_file: str, max_len, vocab_size, tokenizer, document_lines_size=None, batch_size=32):
         self.max_len = max_len
         self.vocab_size = vocab_size
         self.text_file = text_file
@@ -28,7 +29,17 @@ class DataGenerator(Sequence):
         self.batch_size = batch_size
 
     def __len__(self):
-        return int(np.ceil(self.document_lines_size / self.batch_size))
+        if self.document_lines_size is not None:
+            return int(np.ceil(self.document_lines_size / self.batch_size))
+        else:
+            count = 0
+            file = codecs.open(self.text_file, 'r', 'utf-8')
+            line = file.readline()
+            while line:
+                count += 1
+                line = file.readline()
+            self.document_lines_size = count
+            return count
 
     def __getitem__(self, index):
         start = self.batch_size * index

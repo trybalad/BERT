@@ -11,7 +11,7 @@ from keras_bert.tokenizer import Tokenizer
 
 
 def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_file, validate_file=None,
-                training_data_length=1000, validation_data_length=1000, batch_size=10,
+                training_data_length=None, validation_data_length=None, batch_size=10,
                 epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None):
     output = Dense(tokenizer.vocab_size)(bert_model.outputs[0])
     training_model = Model(inputs=bert_model.inputs, outputs=[output])
@@ -22,7 +22,7 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_fil
 
     training_model.compile(optimizer=Adam(), loss=tokens_loss,metrics=[tokens_accuracy])
 
-    generator = DataGenerator(train_file, max_len, tokenizer.vocab_size, training_data_length, tokenizer,
+    generator = DataGenerator(train_file, max_len, tokenizer.vocab_size,tokenizer, training_data_length,
                               batch_size=batch_size)
 
     if load_checkpoint and old_checkpoint:
@@ -31,7 +31,7 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_fil
         training_model.load_weights(checkpoint_file_path)
 
     if validate_file:
-        val_generator = DataGenerator(validate_file, max_len, tokenizer.vocab_size, validation_data_length, tokenizer,
+        val_generator = DataGenerator(validate_file, max_len, tokenizer.vocab_size, tokenizer, validation_data_length,
                                       batch_size=batch_size)
     else:
         val_generator = None

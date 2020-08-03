@@ -1,5 +1,5 @@
 from tensorflow.keras import Input
-from tensorflow.keras.layers import Embedding, Add, Dense, Flatten
+from tensorflow.keras.layers import Embedding, Add
 from tensorflow.keras.models import Model
 
 from keras_bert.layer.encoder import Encoder
@@ -53,3 +53,10 @@ def create_embeddings_layer(tokens, segments, mask, vocab_size, input_dim, embed
     segments_emb = Embedding(2, embedding_size, input_length=input_dim, name='Segments_Embedding')(segments)
     mask_emb = Embedding(input_dim, embedding_size, input_length=input_dim, name='Mask_Embedding')(mask)
     return Add(name="Embeddings_sum")([tokens_emb, segments_emb, mask_emb])
+
+
+def load_model(vocab_size: int, input_dim: int, embedding_dim: int, encoders_num: int, heads_num: int,
+               ff_dim: int, model_checkpoint):
+    model = create_model(vocab_size, input_dim, embedding_dim, encoders_num, heads_num, ff_dim)
+    model.load_weights(model_checkpoint)
+    return model

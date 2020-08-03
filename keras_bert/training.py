@@ -12,7 +12,7 @@ from keras_bert.tokenizer import Tokenizer
 
 def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_file, validate_file=None,
                 training_data_length=None, validation_data_length=None, batch_size=10,
-                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None):
+                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=0.001):
     output = Dense(tokenizer.vocab_size)(bert_model.outputs[0])
     training_model = Model(inputs=bert_model.inputs, outputs=[output])
 
@@ -20,7 +20,7 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, train_fil
     print("Vocab size:", tokenizer.vocab_size)
     print("Max len of tokens:", max_len)
 
-    training_model.compile(optimizer=Adam(), loss=tokens_loss,metrics=[tokens_accuracy])
+    training_model.compile(optimizer=Adam(learning_rate), loss=tokens_loss,metrics=[tokens_accuracy])
 
     generator = DataGenerator(train_file, max_len, tokenizer.vocab_size,tokenizer, training_data_length,
                               batch_size=batch_size)

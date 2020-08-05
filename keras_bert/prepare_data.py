@@ -1,6 +1,7 @@
 import random
-import numpy as np
 from math import floor
+
+import numpy as np
 
 """
 Class preparing data for model.
@@ -51,7 +52,7 @@ def create_ids(tokens_list, max_len, tokenizer):
 def create_segments(tokens_list, max_len):
     segments_list = []
     for tokens in tokens_list:
-        count = 0
+        count = 1
         segments = []
         for token in tokens:
             segments.append(count)
@@ -63,6 +64,14 @@ def create_segments(tokens_list, max_len):
         segments_list.append(segments)
 
     return segments_list
+
+
+def create_nsr(segments_list):
+    nsr_list = []
+    for segments in segments_list:
+        nsr_list.append(np.amax(segments) - 1)
+
+    return nsr_list
 
 
 # Creates masks 1 - significant data, 0 - padding
@@ -88,7 +97,7 @@ def create_train_data(tokens_list):
 
 
 # Reverts one coded ids of tokens to tokens form
-def translate_ids(ids,tokenizer):
+def translate_ids(ids, tokenizer):
     tokens = []
     for i in range(ids.shape[1]):
         decoded_datum = np.argmax(ids[0][i])

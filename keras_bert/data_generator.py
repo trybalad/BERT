@@ -4,7 +4,8 @@ import numpy as np
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.data_utils import Sequence
 
-from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks, create_tokens
+from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks, create_tokens, \
+    create_nsr
 
 """
 Data generator for training/validation of model
@@ -72,4 +73,7 @@ class DataGenerator(Sequence):
         expected_ids = create_ids(tokens, self.max_len, self.tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
-        return [np.array(train_ids), np.array(train_segments), np.array(train_mask)], np.array(expected_one_hot)
+        expected_nsr = create_nsr(train_segments)
+
+        return [np.array(train_ids), np.array(train_segments), np.array(train_mask)], [np.array(expected_one_hot),
+                                                                                       np.array(expected_nsr)]

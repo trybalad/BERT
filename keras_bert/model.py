@@ -50,7 +50,7 @@ def create_embeddings_layer(tokens, segments, mask, vocab_size, input_dim, embed
     TODO Check if own implementation of Embedding layer is not needed
     """
     tokens_emb = Embedding(vocab_size, embedding_size, input_length=input_dim, name='Tokens_Embedding')(tokens)
-    segments_emb = Embedding(2, embedding_size, input_length=input_dim, name='Segments_Embedding')(segments)
+    segments_emb = Embedding(3, embedding_size, input_length=input_dim, name='Segments_Embedding')(segments)
     mask_emb = Embedding(input_dim, embedding_size, input_length=input_dim, name='Mask_Embedding')(mask)
     return Add(name="Embeddings_sum")([tokens_emb, segments_emb, mask_emb])
 

@@ -47,7 +47,6 @@ def create_embeddings_layer(tokens, segments, mask, vocab_size, input_dim, embed
     """
     Creates 3 Embeddings layers for Tokens, Segments and Masks.
     And then adds it into single tensor
-    TODO Check if own implementation of Embedding layer is not needed
     """
     tokens_emb = Embedding(vocab_size, embedding_size, input_length=input_dim, name='Tokens_Embedding')(tokens)
     segments_emb = Embedding(3, embedding_size, input_length=input_dim, name='Segments_Embedding')(segments)

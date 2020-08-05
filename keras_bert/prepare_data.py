@@ -18,6 +18,7 @@ SENTENCE_SEPARATOR_TOKEN = "[SEP]"
 NOT_TO_CHANGE = [CLASS_TOKEN, SENTENCE_SEPARATOR_TOKEN]
 
 
+# Creates tokens from lines of text
 def create_tokens(lines, tokenizer, max_len) -> [[str]]:
     tokens = []
     count = 0
@@ -38,6 +39,46 @@ def create_tokens(lines, tokenizer, max_len) -> [[str]]:
             tokens[count] = tokens[count][0:max_len]
 
     return tokens
+
+
+# Creates tokens from lines of text
+def create_tokens_with_nsr(lines, nsr_lines, tokenizer, max_len) -> [[str]]:
+    tokens = []
+    nsr_pred = []
+    count = 0
+    index_nsr = 0
+
+    for text in lines:
+        should_generate = random.randint(0, 1)
+        sentence_count = 0
+        tokens.insert(count, [])
+        tokens[count].append(CLASS_TOKEN)
+
+        for sent in tokenizer.split_sentences(text):
+            tokens[count] += (tokenizer.convert_to_tokens(sent.text))
+            tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
+            sentence_count += 1
+            if sentence_count == 2:
+                nsr_pred.append(1)
+                break
+            elif should_generate == 1 and sentence_count == 1:
+                for sent2 in tokenizer.split_sentences(nsr_lines[index_nsr]):
+                    tokens[count] += (tokenizer.convert_to_tokens(sent2.text))
+                    tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
+                    index_nsr += 1
+                    sentence_count += 1
+                    nsr_pred.append(0)
+                    if index_nsr == len(nsr_lines):
+                        index_nsr = 0
+                    break
+                break
+        if sentence_count == 1:
+            nsr_pred.append(0)
+
+        if len(tokens[count]) > max_len:
+            tokens[count] = tokens[count][0:max_len]
+
+    return tokens, nsr_pred
 
 
 # Create list of tokens ids
@@ -66,6 +107,7 @@ def create_segments(tokens_list, max_len):
     return segments_list
 
 
+# create_nsr based on segments
 def create_nsr(segments_list):
     nsr_list = []
     for segments in segments_list:

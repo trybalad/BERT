@@ -60,8 +60,8 @@ class Tokenizer:
         doc = self.nlp(document)
         if learn_vocab:
             for token in doc:
-                self.add_to_vocab(token.lemma_)
-        return [token.lemma_ for token in doc if not token.lemma_.isspace()]
+                self.add_to_vocab(token.lemma_.lower())
+        return [token.lemma_.lower() for token in doc if not token.lemma_.isspace()]
 
     def convert_tokens_to_ids(self, tokens):
         result = []

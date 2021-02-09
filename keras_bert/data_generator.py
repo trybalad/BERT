@@ -18,10 +18,12 @@ Data generator for training/validation of model
 
 
 class DataGenerator(Sequence):
-    def __init__(self, text_file: str, max_len, tokenizer, text_file_nsr=None, document_lines_size=None, batch_size=32):
+    def __init__(self, text_file: str, max_len, tokenizer, text_file_nsr=None, document_lines_size=None, batch_size=32,
+                 create_nsr_output=True):
         self.max_len = max_len
         self.vocab_size = tokenizer.vocab_size
         self.text_file = text_file
+        self.create_nsr_output = create_nsr_output
         if text_file_nsr is not None:
             file = codecs.open(text_file_nsr, 'r', 'utf-8')
             self.nsr_lines = file.readlines()
@@ -45,7 +47,7 @@ class DataGenerator(Sequence):
                 count += 1
                 line = file.readline()
             self.document_lines_size = count
-            return count
+            return int(np.ceil(count / self.batch_size))
 
     def __getitem__(self, index):
         start = self.batch_size * index
@@ -68,7 +70,7 @@ class DataGenerator(Sequence):
         return content_lines
 
     def generate_data(self, lines):
-        if self.nsr_lines is None:
+        if self.nsr_lines is None or not self.create_nsr_output:
             tokens = create_tokens(lines, self.tokenizer, self.max_len)
         else:
             tokens, expected_nsr = create_tokens_with_nsr(lines, self.nsr_lines, self.tokenizer, self.max_len)
@@ -81,8 +83,14 @@ class DataGenerator(Sequence):
         expected_ids = create_ids(tokens, self.max_len, self.tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
-        if self.nsr_lines is None:
+        if self.nsr_lines is None and self.create_nsr_output:
             expected_nsr = create_nsr(train_segments)
 
-        return [np.array(train_ids), np.array(train_segments), np.array(train_mask)], [np.array(expected_one_hot),
-                                                                                       np.array(expected_nsr)]
+        inputs = [np.array(train_ids), np.array(train_segments), np.array(train_mask)]
+
+        if self.create_nsr_output:
+            outputs = [np.array(expected_one_hot), np.array(expected_nsr)]
+        else:
+            outputs = [np.array(expected_one_hot)]
+
+        return inputs, outputs

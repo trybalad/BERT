@@ -16,7 +16,7 @@ def prepare_losses_and_metrics(learn_type):
         metrics = {'mlp': [mlp_accuracy, categorical_accuracy], 'nsr': binary_accuracy}
         return loss, loss_weights, metrics
     elif learn_type == "mlp":
-        loss = categorical_crossentropy #mlp_loss
+        loss = mlp_loss
         metrics = [mlp_accuracy, categorical_accuracy]
         return loss, None, metrics
     elif learn_type == "nsr":
@@ -28,7 +28,7 @@ def prepare_losses_and_metrics(learn_type):
 
 
 def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_generator, val_generator=None,
-                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=0.05,
+                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=2e-5,
                 learn_type="all"):
     training_model = prepare_training_model(bert_model, tokenizer, learn_type)
 

@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.data_utils import Sequence
 
-from keras_bert.prepare_data import create_train_data, create_segments, create_ids, create_masks, create_tokens, \
+from keras_bert.prepare_data import create_pretrain_data, create_segments, create_ids, create_masks, create_tokens, \
     create_nsr, create_tokens_with_nsr
 
 """
@@ -74,7 +74,7 @@ class DataGenerator(Sequence):
             tokens = create_tokens(lines, self.tokenizer, self.max_len)
         else:
             tokens, expected_nsr = create_tokens_with_nsr(lines, self.nsr_lines, self.tokenizer, self.max_len)
-        train_tokens = create_train_data(tokens)
+        train_tokens = create_pretrain_data(tokens, self.tokenizer)
 
         train_ids = np.array(create_ids(train_tokens, self.max_len, self.tokenizer))
         train_segments = np.array(create_segments(train_tokens, self.max_len))

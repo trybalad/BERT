@@ -125,17 +125,34 @@ def create_masks(tokens_list, max_len):
 
 
 # Creates test data
-def create_train_data(tokens_list):
+def create_pretrain_data(tokens_list, tokenizer):
     test_inputs = []
     for tokens in tokens_list:
-        test = tokens.copy()
-        for i in range(floor(len(test) * 0.15)):
-            index = random.randint(1, len(tokens) - 2)
-            value = test[index]
-            if value not in NOT_TO_CHANGE:
-                test[index] = MASK_TOKEN
-        test_inputs.append(test)
+        test_data = tokens.copy()
+        mode = random.randint(1, 10)
+        if mode <= 8:
+            mask_tokens(test_data)
+        elif mode == 9:
+           create_random_tokens(test_data, tokenizer)
+
+        test_inputs.append(test_data)
     return test_inputs
+
+
+def mask_tokens(test_data):
+    for i in range(floor(len(test_data) * 0.15)):
+        index = random.randint(1, len(test_data) - 2)
+        value = test_data[index]
+        if value not in NOT_TO_CHANGE:
+            test_data[index] = MASK_TOKEN
+
+
+def create_random_tokens(test_data, tokenizer):
+    for i in range(floor(len(test_data) * 0.1)):
+        index = random.randint(1, len(test_data) - 2)
+        value = test_data[index]
+        if value not in NOT_TO_CHANGE:
+            test_data[index] = tokenizer.index2word[random.randint(4, tokenizer.vocab_size-1)]
 
 
 # Reverts one coded ids of tokens to tokens form

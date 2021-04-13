@@ -16,7 +16,7 @@ def prepare_losses_and_metrics(learn_type):
         metrics = {'mlp': [mlp_accuracy, categorical_accuracy], 'nsr': binary_accuracy}
         return loss, loss_weights, metrics
     elif learn_type == "mlp":
-        loss = mlp_loss
+        loss = categorical_crossentropy  # mlp_loss
         metrics = [mlp_accuracy, categorical_accuracy]
         return loss, None, metrics
     elif learn_type == "nsr":
@@ -27,23 +27,31 @@ def prepare_losses_and_metrics(learn_type):
         return None
 
 
-def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_generator, val_generator=None,
-                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=2e-5,
-                learn_type="all"):
+def prepare_pretrain_model_from_checkpoint(bert_model: Model, tokenizer: Tokenizer, checkpoint_file_path=None,
+                                           load_checkpoint=True, old_checkpoint=None, learning_rate=2e-5,
+                                           learn_type="all"):
     training_model = prepare_training_model(bert_model, tokenizer, learn_type)
-
-    print("Vocab size:", tokenizer.vocab_size)
-    print("Max len of tokens:", max_len)
-
     loss, loss_weights, metrics = prepare_losses_and_metrics(learn_type)
 
-    print(training_model.summary())
     training_model.compile(optimizer=Adam(learning_rate), loss=loss, loss_weights=loss_weights, metrics=metrics)
 
     if load_checkpoint and old_checkpoint:
         training_model.load_weights(old_checkpoint)
     elif load_checkpoint and checkpoint_file_path:
         training_model.load_weights(checkpoint_file_path)
+
+    print(training_model.summary())
+    return training_model
+
+
+def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_generator, val_generator=None,
+                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=2e-5,
+                learn_type="all"):
+    print("Vocab size:", tokenizer.vocab_size)
+    print("Max len of tokens:", max_len)
+
+    training_model = prepare_pretrain_model_from_checkpoint(bert_model, tokenizer, checkpoint_file_path, load_checkpoint,
+                                                           old_checkpoint, learning_rate, learn_type)
 
     if checkpoint_file_path:
         checkpoint = [ModelCheckpoint(filepath=checkpoint_file_path, save_weights_only=True, verbose=1)]

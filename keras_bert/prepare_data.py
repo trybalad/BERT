@@ -1,5 +1,5 @@
 import random
-from math import floor
+from math import floor, ceil
 
 import numpy as np
 
@@ -24,6 +24,9 @@ def create_tokens(lines, tokenizer, max_len) -> [[str]]:
     count = 0
 
     for text in lines:
+        if not text:
+            continue
+
         sentence_count = 0
         tokens.insert(count, [])
         tokens[count].append(CLASS_TOKEN)
@@ -41,6 +44,13 @@ def create_tokens(lines, tokenizer, max_len) -> [[str]]:
     return tokens
 
 
+def count_data_len(line, tokenizer):
+    count = 0
+    for sent in tokenizer.split_sentences(line):
+        count += 1
+    return ceil(count / 2)
+
+
 # Creates tokens from lines of text
 def create_tokens_with_nsr(lines, nsr_lines, tokenizer, max_len) -> [[str]]:
     tokens = []
@@ -49,6 +59,9 @@ def create_tokens_with_nsr(lines, nsr_lines, tokenizer, max_len) -> [[str]]:
     index_nsr = 0
 
     for text in lines:
+        if not text:
+            continue
+
         should_generate = random.randint(0, 1)
         sentence_count = 0
         tokens.insert(count, [])
@@ -62,15 +75,13 @@ def create_tokens_with_nsr(lines, nsr_lines, tokenizer, max_len) -> [[str]]:
                 nsr_pred.append(1)
                 break
             elif should_generate == 1 and sentence_count == 1:
-                for sent2 in tokenizer.split_sentences(nsr_lines[index_nsr]):
-                    tokens[count] += (tokenizer.convert_to_tokens(sent2.text))
-                    tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
-                    index_nsr += 1
-                    sentence_count += 1
-                    nsr_pred.append(0)
-                    if index_nsr == len(nsr_lines):
-                        index_nsr = 0
-                    break
+                index_nsr = random.randint(0, len(nsr_lines) - 1)
+                sents = tokenizer.split_sentences(nsr_lines[index_nsr])
+                tokens[count] += (tokenizer.convert_to_tokens(next(sents).text))
+                tokens[count].append(SENTENCE_SEPARATOR_TOKEN)
+                sentence_count += 1
+                nsr_pred.append(0)
+
                 break
         if sentence_count == 1:
             nsr_pred.append(0)
@@ -133,7 +144,7 @@ def create_pretrain_data(tokens_list, tokenizer):
         if mode <= 8:
             mask_tokens(test_data)
         elif mode == 9:
-           create_random_tokens(test_data, tokenizer)
+            create_random_tokens(test_data, tokenizer)
 
         test_inputs.append(test_data)
     return test_inputs
@@ -152,7 +163,7 @@ def create_random_tokens(test_data, tokenizer):
         index = random.randint(1, len(test_data) - 2)
         value = test_data[index]
         if value not in NOT_TO_CHANGE:
-            test_data[index] = tokenizer.index2word[random.randint(4, tokenizer.vocab_size-1)]
+            test_data[index] = tokenizer.index2word[random.randint(4, tokenizer.vocab_size - 1)]
 
 
 # Reverts one coded ids of tokens to tokens form

@@ -20,8 +20,11 @@ def preprocess_file(to_read_file_path, to_save_file_path, lines_to_process=None,
     print(saved_lines)
     while line and (lines_to_process is None or saved_lines < lines_to_process):
         line = line.strip()
-        if line != '':
-            doc = nlp(line)
+        if line != '' and not line.startswith("<") and not line.strip().endswith(">"):
+            doc = nlp(line.strip())
+            count = 0
+            for token in doc:
+                count += 1
             sentence_in_line = 0
             new_line = ""
             for sentence in doc.sents:
@@ -37,4 +40,5 @@ def preprocess_file(to_read_file_path, to_save_file_path, lines_to_process=None,
                 data_file.write(new_line + "\n")
         line = document.readline()
         saved_lines += 1
-        print("Preprocessed line:", saved_lines, "/", lines_to_process)
+        if saved_lines % 100 == 0:
+            print("Preprocessed line:", saved_lines, "/", lines_to_process)

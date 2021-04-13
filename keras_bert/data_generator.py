@@ -1,11 +1,12 @@
 import codecs
+import random
 
 import numpy as np
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.data_utils import Sequence
 
 from keras_bert.prepare_data import create_pretrain_data, create_segments, create_ids, create_masks, create_tokens, \
-    create_nsr, create_tokens_with_nsr
+    create_tokens_with_nsr
 
 """
 Data generator for training/validation of model
@@ -70,8 +71,14 @@ class DataGenerator(Sequence):
         return content_lines
 
     def generate_data(self, lines):
-        if self.nsr_lines is None or not self.create_nsr_output:
+        if self.nsr_lines is None and not self.create_nsr_output:
             tokens = create_tokens(lines, self.tokenizer, self.max_len)
+        elif self.nsr_lines is None and self.create_nsr_output:
+            nsp_index = random.randint(0, int(np.ceil(self.document_lines_size / self.batch_size)) - 1)
+            start = self.batch_size * nsp_index
+            end = min(start + self.batch_size, self.document_lines_size)
+            tokens, expected_nsr = create_tokens_with_nsr(lines, self.get_content_lines(start, end), self.tokenizer,
+                                                          self.max_len)
         else:
             tokens, expected_nsr = create_tokens_with_nsr(lines, self.nsr_lines, self.tokenizer, self.max_len)
         train_tokens = create_pretrain_data(tokens, self.tokenizer)
@@ -83,8 +90,8 @@ class DataGenerator(Sequence):
         expected_ids = create_ids(tokens, self.max_len, self.tokenizer)
         expected_one_hot = [to_categorical(expected_id, self.vocab_size) for expected_id in expected_ids]
 
-        if self.nsr_lines is None and self.create_nsr_output:
-            expected_nsr = create_nsr(train_segments)
+        # if self.nsr_lines is None and self.create_nsr_output:
+        #     expected_nsr = create_nsr(train_segments)
 
         inputs = [np.array(train_ids), np.array(train_segments), np.array(train_mask)]
 

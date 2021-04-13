@@ -6,17 +6,18 @@ from keras_bert.training import train_model
 """Read vocab"""
 print("Reading vocab.")
 tokenizer = Tokenizer()
-tokenizer.read_vocab('../../data/vocab.txt')
+tokenizer.read_vocab('./data/vocab_wiki_small.txt')
+tokenizer.change_to_reversible()
 print("Vocab of size:", tokenizer.vocab_size, "loaded.")
 
 """Prepare data generators"""
-data_generator = DataGenerator("../../data/pl_dedup.txt", 64, tokenizer, batch_size=64, create_nsr_output=False)
+data_generator = DataGenerator("./data/wiki_clean.txt", 32, tokenizer, batch_size=64, create_nsr_output=True)
 print("Data generator prepared.")
 
 """Prepare model."""
-sequence_encoder = create_model(tokenizer.vocab_size, 64, 768, 16, 16, 2048)
+sequence_encoder = create_model(tokenizer.vocab_size, 32, 768, 16, 16, 2048)
 print("Model created.")
 
 """Start training."""
-train = train_model(sequence_encoder, 64, tokenizer, data_generator, epochs=4, checkpoint_file_path="../../data/checkpoint.ckpt", load_checkpoint=False, learn_type="mlp")
+train = train_model(sequence_encoder, 32, tokenizer, data_generator, epochs=500, checkpoint_file_path="./data/checkpoint_wiki_nsr.ckpt", load_checkpoint=False)
 

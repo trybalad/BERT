@@ -1,3 +1,3 @@
 from keras_bert.preproces_data import preprocess_file
 
-preprocess_file("./../data/wiki_dump.txt","wiki_clean.txt")
+preprocess_file("./../data/wiki_clean.txt","wiki_clean_part_1.txt",lines_to_process=100_000)

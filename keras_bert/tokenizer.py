@@ -14,7 +14,7 @@ MASK_ID = 3
 
 class Tokenizer:
     def __init__(self):
-        self.nlp = spacy.load('pl_core_news_md')
+        self.nlp = spacy.load('pl_core_news_lg')
         self.vocab_size = 4
         self.word2index = {UNKNOWN_TOKEN: UNKNOWN_ID, CLASS_TOKEN: CLASS_ID,
                            SENTENCE_SEPARATOR_TOKEN: SENTENCE_SEPARATOR_ID, MASK_TOKEN: MASK_ID}

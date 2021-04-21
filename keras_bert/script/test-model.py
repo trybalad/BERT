@@ -1,3 +1,6 @@
+import sys,os
+sys.path.append(os.getcwd())
+
 from keras_bert.data_generator import DataGenerator
 from keras_bert.model import create_model
 from keras_bert.tokenizer import Tokenizer
@@ -15,9 +18,9 @@ data_generator = DataGenerator("./data/wiki_clean.txt", 32, tokenizer, batch_siz
 print("Data generator prepared.")
 
 """Prepare model."""
-sequence_encoder = create_model(tokenizer.vocab_size, 32, 768, 16, 16, 2048)
+sequence_encoder = create_model(tokenizer.vocab_size, 32, 768, 12, 12, 768)
 print("Model created.")
 
 """Start training."""
-train = train_model(sequence_encoder, 32, tokenizer, data_generator, epochs=500, checkpoint_file_path="./data/checkpoint_wiki_nsr.ckpt", load_checkpoint=False)
+train = train_model(sequence_encoder, 32, tokenizer, data_generator, epochs=500, checkpoint_file_path="$HOME/data/checkpoint_wiki_nsr.ckpt", load_checkpoint=False)
 

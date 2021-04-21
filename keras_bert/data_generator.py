@@ -19,7 +19,7 @@ Data generator for training/validation of model
 
 
 class DataGenerator(Sequence):
-    def __init__(self, text_file: str, max_len, tokenizer, text_file_nsr=None, document_lines_size=None, batch_size=32,
+    def __init__(self, text_file, max_len, tokenizer, text_file_nsr=None, document_lines_size=None, batch_size=32,
                  create_nsr_output=True):
         self.max_len = max_len
         self.vocab_size = tokenizer.vocab_size

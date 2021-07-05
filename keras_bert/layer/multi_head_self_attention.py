@@ -12,26 +12,26 @@ Multi Head Self Attention Layer class.
 
 class MultiHeadSelfAttention(Layer):
     def __init__(self, embedding_dim, num_heads):
-        super(MultiHeadSelfAttention, self).__init__()
+        super().__init__()
+        self.check_params(embedding_dim, num_heads)
 
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self.projection_dim = embedding_dim // num_heads
-
-        self.check_correct_params()
 
         self.query_layer = Dense(embedding_dim)
         self.key_layer = Dense(embedding_dim)
         self.value_layer = Dense(embedding_dim)
         self.combine_heads = Dense(embedding_dim)
 
-    def check_correct_params(self):
-        if self.embedding_dim % self.num_heads != 0:
+    @staticmethod
+    def check_params(embedding_dim, num_heads):
+        if embedding_dim % num_heads != 0:
             raise ValueError(
-                "Wrong parameters, number of embedding dimensions should be divisable by number of heads"
+                "Wrong parameters, number of embedding dimensions must be divisable by number of heads"
             )
 
-    """ Calculates attention for given vectors"""
+    # Calculates attention for given vectors
     @staticmethod
     def attention(query, key, value):
         score = matmul(query, key, transpose_b=True)
@@ -41,32 +41,30 @@ class MultiHeadSelfAttention(Layer):
         output = matmul(weights, value)
         return output
 
-    """ Split word vectors into chunks of size num_heads, and divide work"""
+    # Split word vectors into chunks of size num_heads, and divide work
     def separate_heads(self, x, batch_size):
         x = reshape(x, (batch_size, -1, self.num_heads, self.projection_dim))
         return transpose(x, perm=[0, 2, 1, 3])
 
-    """ Layer use self-attention, so we are using one input for all layers"""
+    # Layer use self-attention, so we are using one input for all layers
     def __call__(self, inputs):
-
         batch_size = shape(inputs)[0]
 
-        """Pass input through all the base layers"""
+        # Pass input through all the base layers
         query = self.query_layer(inputs)
         key = self.key_layer(inputs)
         value = self.value_layer(inputs)
 
-        """Splits vector representation of words into num_heads parts"""
+        # Splits vector representation of words into num_heads parts
         query = self.separate_heads(query, batch_size)
         key = self.separate_heads(key, batch_size)
         value = self.separate_heads(value, batch_size)
 
-        """Calculate value of self-attention for parts"""
+        # Calculate value of self-attention for parts
         attention = self.attention(query, key, value)
-        attention = transpose(attention, perm=[0, 2, 1, 3])
 
-        """Combine information learnt by different heads"""
+        # Combine information learnt by different heads
+        attention = transpose(attention, perm=[0, 2, 1, 3])
         concat_attention = reshape(attention, (batch_size, -1, self.embedding_dim))
         output = self.combine_heads(concat_attention)
         return output
-

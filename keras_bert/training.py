@@ -1,30 +1,36 @@
+from datetime import datetime
+from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras import Model
 from tensorflow.keras.backend import switch, zeros_like, floatx, sum, cast, epsilon, argmax, equal, not_equal
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.layers import Dense, Flatten
 from tensorflow.keras.losses import categorical_crossentropy, binary_crossentropy
-from tensorflow.keras.metrics import binary_accuracy, categorical_accuracy
+from tensorflow.keras.metrics import binary_accuracy
 from tensorflow.keras.optimizers import Adam
 
 from keras_bert.tokenizer import Tokenizer
 
 
-def prepare_losses_and_metrics(learn_type):
-    if learn_type == "all":
-        loss = {'mlp': mlp_loss, 'nsr': binary_crossentropy}
-        loss_weights = {'mlp': 0.9, 'nsr': 0.1}
-        metrics = {'mlp': [mlp_accuracy, categorical_accuracy], 'nsr': binary_accuracy}
-        return loss, loss_weights, metrics
-    elif learn_type == "mlp":
-        loss = categorical_crossentropy  # mlp_loss
-        metrics = [mlp_accuracy, categorical_accuracy]
-        return loss, None, metrics
-    elif learn_type == "nsr":
-        loss = binary_crossentropy
-        metrics = binary_accuracy
-        return loss, None, metrics
+def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_generator, val_generator=None,
+                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=2e-5,
+                learn_type="all"):
+    print("Vocab size:", tokenizer.vocab_size)
+    print("Max len of tokens:", max_len)
+
+    training_model = prepare_pretrain_model_from_checkpoint(bert_model, tokenizer, checkpoint_file_path,
+                                                            load_checkpoint,
+                                                            old_checkpoint, learning_rate, learn_type)
+
+    if checkpoint_file_path:
+        checkpoint = [ModelCheckpoint(filepath=checkpoint_file_path, save_weights_only=True, verbose=1)]
     else:
-        return None
+        checkpoint = None
+
+    log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq=100, embeddings_freq=1)
+    training_model.fit(data_generator, validation_data=val_generator, epochs=epochs,
+                       callbacks=[tensorboard_callback, checkpoint])
+    return training_model
 
 
 def prepare_pretrain_model_from_checkpoint(bert_model: Model, tokenizer: Tokenizer, checkpoint_file_path=None,
@@ -44,51 +50,49 @@ def prepare_pretrain_model_from_checkpoint(bert_model: Model, tokenizer: Tokeniz
     return training_model
 
 
-def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_generator, val_generator=None,
-                epochs=10, checkpoint_file_path=None, load_checkpoint=False, old_checkpoint=None, learning_rate=2e-5,
-                learn_type="all"):
-    print("Vocab size:", tokenizer.vocab_size)
-    print("Max len of tokens:", max_len)
-
-    training_model = prepare_pretrain_model_from_checkpoint(bert_model, tokenizer, checkpoint_file_path, load_checkpoint,
-                                                           old_checkpoint, learning_rate, learn_type)
-
-    if checkpoint_file_path:
-        checkpoint = [ModelCheckpoint(filepath=checkpoint_file_path, save_weights_only=True, verbose=1)]
-    else:
-        checkpoint = None
-
-    history = training_model.fit_generator(data_generator, validation_data=val_generator, epochs=epochs,
-                                           callbacks=checkpoint)
-    # plot_model_history(history)
-    return training_model
-
-
 def prepare_training_model(bert_model, tokenizer, training_type):
     outputs = []
-    output_mlp = Dense(tokenizer.vocab_size, activation="softmax", name='mlp')(bert_model.output)
-    output_nsr = Flatten()(bert_model.output)
-    output_nsr = Dense(1, activation="sigmoid", name="nsr")(output_nsr)
+    output_mlm = Dense(tokenizer.vocab_size, activation="softmax", name='mlm')(bert_model.output)
+    output_nsp = Flatten()(bert_model.output)
+    output_nsp = Dense(1, activation="sigmoid", name="nsp")(output_nsp)
 
     if training_type == "all":
-        outputs.append(output_mlp)
-        outputs.append(output_nsr)
-    elif training_type == "mlp":
-        outputs.append(output_mlp)
-    elif training_type == "nsr":
-        outputs.append(output_nsr)
+        outputs.append(output_mlm)
+        outputs.append(output_nsp)
+    elif training_type == "mlm":
+        outputs.append(output_mlm)
+    elif training_type == "nsp":
+        outputs.append(output_nsp)
 
     return Model(inputs=bert_model.inputs, outputs=outputs)
 
 
-def mlp_loss(y_true, y_pred):
+def prepare_losses_and_metrics(learn_type):
+    if learn_type == "all":
+        loss = {'mlm': masked_loss, 'nsp': binary_crossentropy}
+        loss_weights = {'mlm': 0.6, 'nsp': 0.4}
+        metrics = {'mlm': masked_accuracy, 'nsp': binary_accuracy}
+        return loss, loss_weights, metrics
+    elif learn_type == "mlm":
+        loss = masked_loss
+        metrics = masked_accuracy
+        return loss, None, metrics
+    elif learn_type == "nsp":
+        loss = binary_crossentropy
+        metrics = binary_accuracy
+        return loss, None, metrics
+    else:
+        return None
+
+
+def masked_loss(y_true, y_pred):
     max_args = argmax(y_true)
     mask = cast(not_equal(max_args, zeros_like(max_args)), dtype='float32')
     loss = switch(mask, categorical_crossentropy(y_true, y_pred, from_logits=True), zeros_like(mask, dtype=floatx()))
     return sum(loss) / (cast(sum(mask), dtype='float32') + epsilon())
 
 
-def mlp_accuracy(y_true, y_pred):
+def masked_accuracy(y_true, y_pred):
     print(y_true)
     max_args = argmax(y_true)
     mask = cast(not_equal(max_args, zeros_like(max_args)), dtype='float32')

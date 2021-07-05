@@ -9,11 +9,11 @@ Creates fully connected feed forward layer with `relu` activation in between.
 
 
 class PointWiseFeedForward(Layer):
-    def __init__(self, output_nodes_num, feed_forward_dimensions, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, output_nodes_num, feed_forward_dimensions):
+        super().__init__()
         self.in_layer = Dense(feed_forward_dimensions, activation='relu')
         self.out_layer = Dense(output_nodes_num)
 
-    def __call__(self, layer_input, **kwargs):
+    def __call__(self, layer_input):
         val = self.in_layer(layer_input)
         return self.out_layer(val)

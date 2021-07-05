@@ -7,7 +7,7 @@ from keras_bert.training import prepare_pretrain_model_from_checkpoint
 """Read vocab"""
 print("Reading vocab.")
 tokenizer = Tokenizer()
-tokenizer.read_vocab('./data/vocab.txt')
+tokenizer.read_vocab('./data/counted_vocab.txt')
 print("Vocab of size:", tokenizer.vocab_size, "loaded.")
 
 """Prepare model."""
@@ -16,7 +16,7 @@ print("Model created.")
 
 """Start predictions."""
 model = prepare_pretrain_model_from_checkpoint(sequence_encoder, tokenizer,
-                                               checkpoint_file_path="./data/checkpoint4.ckpt", learn_type="mlp")
+                                               checkpoint_file_path="./data/checkpoint_d.ckpt", learn_type="mlp")
 
 message = "Edytor tekstu asdf Office 2007 przewodnik dla gimnazjalisty Autor: Dariusz Kwieciński nauczyciel ZPO w Sieciechowie"
 tokens = create_tokens([message], tokenizer, 16)

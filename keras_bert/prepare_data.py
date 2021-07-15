@@ -169,7 +169,7 @@ def create_random_tokens(test_data, tokenizer):
 # Reverts one coded ids of tokens to tokens form
 def translate_ids(ids, tokenizer):
     tokens = []
-    for i in range(ids.shape[1]):
-        decoded_datum = np.argmax(ids[0][i])
+    for i in range(len(ids[0][0])):
+        decoded_datum = np.argmax(ids[0][0][i])
         tokens.append(tokenizer.convert_to_token(decoded_datum))
     return tokens

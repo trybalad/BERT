@@ -27,7 +27,7 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_gene
         checkpoint = None
 
     log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq=100, embeddings_freq=1)
+    tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=5, embeddings_freq=5)
     training_model.fit(data_generator, validation_data=val_generator, epochs=epochs,
                        callbacks=[tensorboard_callback, checkpoint])
     return training_model
@@ -93,7 +93,6 @@ def masked_loss(y_true, y_pred):
 
 
 def masked_accuracy(y_true, y_pred):
-    print(y_true)
     max_args = argmax(y_true)
     mask = cast(not_equal(max_args, zeros_like(max_args)), dtype='float32')
     points = switch(mask, cast(equal(argmax(y_true, -1), argmax(y_pred, -1)), dtype='float32'),

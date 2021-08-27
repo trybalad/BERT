@@ -27,7 +27,9 @@ def train_model(bert_model: Model, max_len: int, tokenizer: Tokenizer, data_gene
         checkpoint = None
 
     log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=5, embeddings_freq=5)
+    tensorboard_callback = TensorBoard(log_dir=log_dir)
+
+    print(training_model.summary())
     training_model.fit(data_generator, validation_data=val_generator, epochs=epochs,
                        callbacks=[tensorboard_callback, checkpoint])
     return training_model
@@ -46,7 +48,6 @@ def prepare_pretrain_model_from_checkpoint(bert_model: Model, tokenizer: Tokeniz
     elif load_checkpoint and checkpoint_file_path:
         training_model.load_weights(checkpoint_file_path)
 
-    print(training_model.summary())
     return training_model
 
 
@@ -89,7 +90,7 @@ def masked_loss(y_true, y_pred):
     max_args = argmax(y_true)
     mask = cast(not_equal(max_args, zeros_like(max_args)), dtype='float32')
     loss = switch(mask, categorical_crossentropy(y_true, y_pred, from_logits=True), zeros_like(mask, dtype=floatx()))
-    return sum(loss) / (cast(sum(mask), dtype='float32') + epsilon())
+    return sum(loss) / (cast(sum(mask), dtype='float32')+ epsilon())
 
 
 def masked_accuracy(y_true, y_pred):

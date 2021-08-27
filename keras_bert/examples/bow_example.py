@@ -4,12 +4,13 @@ def create_bow(ids, dictionary_size):
         bow[id] += 1
     return bow
 
-
+# ids1 = Najwięcej teiny zawiera herbata czarna.
+# ids2 = Czarna herbata zawiera więcej teiny niż herbata czerwona.
 dict = ["czarna", "czerwona", "herbata", "najwięcej",
         "niż", "teina", "więcej", "zawierać"]
-ids1 = [3, 5, 7, 2, 0]  # Najwięcej teiny zawiera herbata czarna.
-ids2 = [0, 2, 7, 6, 5, 4, 2, 1]  # Czarna herbata zawiera więcej teiny niż herbata czerwona.
-ids3 = ids1 + ids2  # Najwięcej teiny zawiera herbata czarna. Czarna herbata zawiera więcej teiny niż herbata czerwona.
+ids1 = [3, 5, 7, 2, 0]
+ids2 = [0, 2, 7, 6, 5, 4, 2, 1]
+ids3 = ids1 + ids2
 
 bow1 = create_bow(ids1, len(dict))
 bow2 = create_bow(ids2, len(dict))

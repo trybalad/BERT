@@ -32,11 +32,14 @@ def calculate_tf_idf(term, doc, idf):
     return idf[term] * calculate_tf(term, doc)
 
 
-dict = ["celsjusz", "czarna", "herbata", "parzyć", "stopień", "temperatura", "w", "zielona", "70", "100"]
-doc1 = ["herbata", "zielona", "parzyć", "w", "temperatura", "70", "stopień",
-        "celsjusz"]  # Herbatę zieloną parzymy w temperaturze 70 stopni Celsjusza.
-doc2 = ["herbata", "czarna", "parzyć", "w", "temperatura", "100", "stopień",
-        "celsjusz"]  # Herbatę czarną parzymy w temperaturze 100 stopni Celsjusza.
+dict = ["celsjusz", "czarna", "herbata", "parzyć", "stopień",
+        "temperatura", "w", "zielona", "70", "100"]
+doc1 = ["herbata", "zielona", "parzyć", "w", "temperatura",
+        "70", "stopień", "celsjusz"]
+# Herbatę zieloną parzymy w temperaturze 70 stopni Celsjusza.
+doc2 = ["herbata", "czarna", "parzyć", "w", "temperatura",
+        "100", "stopień", "celsjusz"]
+# Herbatę czarną parzymy w temperaturze 100 stopni Celsjusza.
 dataset = [doc1, doc2]
 
 idf = calculate_idf(dataset, dict)
